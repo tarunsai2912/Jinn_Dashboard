@@ -90,7 +90,7 @@ const App = () => {
                   </div>
                 ))}
               </div>
-              <div onClick={handleAddSubmenuField} className="mb-4 w-full text-[#767575] flex flex-row items-center gap-2 cursor-pointer"><FaPlus /> Add Subtask Field</div>
+              <div onClick={handleAddSubmenuField} className="mb-4 w-full text-[#767575] flex flex-row items-center gap-2 cursor-pointer"><FaPlus /> Add SubMenu Field</div>
                 <button
                   onClick={handleAddMenu}
                   disabled={modalLoading}
@@ -121,7 +121,7 @@ const App = () => {
                 <Route path="/:menu" element={<Content />} />
                 <Route path="/" element={
                     <div className='flex justify-center items-center mt-[10vh]'>
-                        <h1 className='text-3xl'>Please Select a Task</h1>
+                        <h1 className='text-3xl'>Please Select a Menu</h1>
                     </div>} />
               </Routes>
             </div>
