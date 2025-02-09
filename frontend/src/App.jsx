@@ -9,10 +9,12 @@ import Modal from './components/Modal';
 import { IoMdClose } from "react-icons/io";
 import { FaBars } from 'react-icons/fa';
 import toast, { Toaster } from 'react-hot-toast';
+import { useSelector } from 'react-redux';
 
 const App = () => {
     const [menuName, setMenuName] = useState('');
     const [submenuNames, setSubmenuNames] = useState(['']);
+    const existingMenus = useSelector(state => state.menus);
     const [modalOpen, setModalOpen] = useState(false);
     const [modalLoading, setModalLoading] = useState(false);
     const dispatch = useDispatch();
@@ -30,12 +32,16 @@ const App = () => {
     };
 
     const handleAddMenu = () => {
-      if (submenuNames.some(submenu => submenu.name === '')) {
-        toast.error('Subtasks names cannot be empty');
+      if (submenuNames.some(submenu => submenu.trim() === '')) {
+        toast.error('Submenu names cannot be empty');
         return;
-      }
+      }    
       if (!menuName.trim()) {
         toast.error('Task name cannot be empty');
+        return;
+      }
+      if (existingMenus.some(menu => menu.name.toLowerCase() === menuName.toLowerCase())) {
+        toast.error('Menu with this name already exists');
         return;
       }
       setModalLoading(true);

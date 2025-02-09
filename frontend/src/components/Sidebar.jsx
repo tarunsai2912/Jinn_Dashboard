@@ -38,7 +38,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                 {menus.map((menu, menuIndex) => (
                     <div key={menu.name} >
                         <div className="flex flex-row justify-between items-center cursor-pointer">
-                           <Link to={`/${menu.name.toLowerCase()}`}>
+                           <Link to={`/${menu.name}`} onClick={() => setIsSidebarOpen(false)}>
                             <span className='flex flex-row items-center gap-2'>
                                 {imgArray[(currentIndex + menuIndex) % imgArray.length]} {menu.name}
                             </span>
@@ -53,7 +53,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                                         <div className="absolute left-0">
                                             <MdOutlineHorizontalRule />
                                         </div>
-                                        <Link to={`/${menu.name.toLowerCase()}/${submenu.name.toLowerCase()}`} className="block py-1 pl-6">
+                                        <Link to={`/${menu.name}/${submenu.name}`} className="block py-1 pl-6" onClick={() => setIsSidebarOpen(false)}>
                                             {submenu.name}
                                         </Link>
                                     </div>
