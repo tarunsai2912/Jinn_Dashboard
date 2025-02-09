@@ -44,6 +44,11 @@ const App = () => {
         toast.error('Menu with this name already exists');
         return;
       }
+      const uniqueSubmenus = new Set(submenuNames.map(sub => sub.toLowerCase()));
+      if (uniqueSubmenus.size !== submenuNames.length) {
+        toast.error('Duplicate submenus are not allowed');
+        return;
+      }
       setModalLoading(true);
       const newMenu = {
         name: menuName,

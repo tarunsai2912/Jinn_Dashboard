@@ -22,7 +22,11 @@ const Content = () => {
             toast.error('Submenu name cannot be empty');
             return;
         }
-
+        const isDuplicate = selectedMenu.subMenus.some(sub => sub.name.toLowerCase() === newSubmenu.toLowerCase());
+        if (isDuplicate) {
+            toast.error('Submenu with this name already exists');
+            return;
+        }
         dispatch(addSubmenu({ menuId: selectedMenu._id, submenuName: newSubmenu }))
             .unwrap()
             .then(() => {
