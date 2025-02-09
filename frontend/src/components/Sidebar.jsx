@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { fetchMenus } from '../redux/menuSlice';
-import { MdExpandMore, MdExpandLess } from 'react-icons/md';
+import { IoIosArrowDown } from 'react-icons/io';
+import { IoIosArrowForward } from "react-icons/io";
 import { IoMdClose } from "react-icons/io";
 import { FaHome } from "react-icons/fa";
 import { FaChartPie } from "react-icons/fa6";
@@ -36,11 +37,13 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
             <div className="flex flex-col gap-[3vh]">
                 {menus.map((menu, menuIndex) => (
                     <div key={menu.name} >
-                        <div className="flex flex-row justify-between items-center cursor-pointer" onClick={() => toggleMenu(menu.name)}>
+                        <div className="flex flex-row justify-between items-center cursor-pointer">
+                           <Link to={`/${menu.name.toLowerCase()}`}>
                             <span className='flex flex-row items-center gap-2'>
-                                {imgArray[(currentIndex + menuIndex) % imgArray.length]}{menu.name}
+                                {imgArray[(currentIndex + menuIndex) % imgArray.length]} {menu.name}
                             </span>
-                            {expandedMenus[menu.name] ? <MdExpandLess /> : <MdExpandMore />}
+                            </Link>
+                            {expandedMenus[menu.name] ? <IoIosArrowDown onClick={() => toggleMenu(menu.name)} /> : <IoIosArrowForward onClick={() => toggleMenu(menu.name)} />}
                         </div>
                         {expandedMenus[menu.name] && (
                             <div className="pl-4 relative">

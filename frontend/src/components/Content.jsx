@@ -6,7 +6,7 @@ const Content = () => {
     return (
         <div className="content p-4">
             <h1 className="text-2xl font-bold">{submenu || menu}</h1>
-            <p>Content for {submenu || menu}</p>
+            <p>Data about {submenu || menu}</p>
         </div>
     );
 };
