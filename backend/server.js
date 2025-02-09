@@ -11,7 +11,6 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Task Schema
 const TaskSchema = new mongoose.Schema({
     name: String,
     subtasks: [
@@ -23,12 +22,10 @@ const TaskSchema = new mongoose.Schema({
 
 const Task = mongoose.model('Task', TaskSchema);
 
-// Routes
 app.get('/', (req, res) => {
     res.send('Welcome to Jinn');
 });
 
-// Get All Tasks
 app.get('/api/tasks', async (req, res) => {
     try {
         const tasks = await Task.find();
@@ -38,7 +35,6 @@ app.get('/api/tasks', async (req, res) => {
     }
 });
 
-// Add Task
 app.post('/api/tasks', async (req, res) => {
     try {
         const newTask = new Task(req.body);
@@ -49,7 +45,6 @@ app.post('/api/tasks', async (req, res) => {
     }
 });
 
-// Update Task
 app.put('/api/tasks/:id', async (req, res) => {
     try {
         const task = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -59,7 +54,6 @@ app.put('/api/tasks/:id', async (req, res) => {
     }
 });
 
-// Delete Task
 app.delete('/api/tasks/:id', async (req, res) => {
     try {
         await Task.findByIdAndDelete(req.params.id);
@@ -69,7 +63,6 @@ app.delete('/api/tasks/:id', async (req, res) => {
     }
 });
 
-// Add Subtask
 app.post('/api/tasks/:taskId/subtasks', async (req, res) => {
     try {
         const task = await Task.findById(req.params.taskId);
@@ -83,7 +76,6 @@ app.post('/api/tasks/:taskId/subtasks', async (req, res) => {
     }
 });
 
-// Delete Subtask
 app.delete('/api/tasks/:taskId/subtasks/:subtaskId', async (req, res) => {
     try {
         const task = await Task.findById(req.params.taskId);

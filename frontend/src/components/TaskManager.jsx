@@ -25,11 +25,20 @@ function TaskManager() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [editTaskId, setEditTaskId] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [modalLoading, setModalLoading] = useState(false);
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
     useEffect(() => {
-        dispatch(fetchTasks());
+        setLoading(true); 
+        dispatch(fetchTasks())
+            .unwrap()
+            .then(() => setLoading(false)) 
+            .catch(() => {
+                setLoading(false);
+                toast.error('Failed to fetch tasks');
+            });
     }, [dispatch]);
 
     useEffect(() => {
@@ -39,7 +48,7 @@ function TaskManager() {
         }
     }, [id, tasks]);
 
-    const handleAddTask = () => {
+    const handleAddTask = async () => {
         if (subtasks.some(subtask => subtask.trim() === '')) {
             toast.error('Subtasks cannot be empty');
             return;
@@ -48,15 +57,22 @@ function TaskManager() {
             toast.error('Task name cannot be empty');
             return;
         }
+        setModalLoading(true);
         const newTask = {
             name: taskName,
             subtasks: subtasks.map(name => ({ name }))
         };
-        dispatch(addTask(newTask));
-        setTaskName('');
-        setSubtasks(['']);
-        setModalOpen(false);
-        toast.success('Task added successfully');
+        try {
+            await dispatch(addTask(newTask)).unwrap();
+            setTaskName('');
+            setSubtasks(['']);
+            setModalOpen(false);
+            toast.success('Task added successfully');
+        } catch (error) {
+            toast.error('Failed to add task');
+        } finally {
+            setModalLoading(false);
+        }
     };
 
     const handleAddSubtaskField = () => {
@@ -69,10 +85,17 @@ function TaskManager() {
         setSubtasks(newSubtasks);
     };
 
-    const handleDeleteTask = (taskId) => {
-        dispatch(deleteTask(taskId));
-        setSelectedTask(null);
-        toast.success('Task deleted successfully');
+    const handleDeleteTask = async (taskId) => {
+        setLoading(true);
+        try {
+            await dispatch(deleteTask(taskId)).unwrap();
+            setSelectedTask(null);
+            toast.success('Task deleted successfully');
+        } catch (error) {
+            toast.error('Failed to delete task');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleEditTask = (task) => {
@@ -83,7 +106,7 @@ function TaskManager() {
         setModalOpen(true);
     };
 
-    const handleUpdateTask = () => {
+    const handleUpdateTask = async () => {
         if (!taskName.trim()) {
             toast.error('Task name cannot be empty');
             return;
@@ -92,26 +115,40 @@ function TaskManager() {
             toast.error('Subtasks cannot be empty');
             return;
         }
+        setModalLoading(true); 
         const updatedTask = {
             _id: editTaskId,
             name: taskName,
             subtasks: subtasks.map(name => ({ name }))
         };
-        dispatch(updateTask(updatedTask));
-        setModalOpen(false);
-        setIsEditMode(false);
-        setTaskName('');
-        setSubtasks(['']);
-        toast.success('Task updated successfully');
+        try {
+            await dispatch(updateTask(updatedTask)).unwrap();
+            setModalOpen(false);
+            setIsEditMode(false);
+            setTaskName('');
+            setSubtasks(['']);
+            toast.success('Task updated successfully');
+        } catch (error) {
+            toast.error('Failed to update task');
+        } finally {
+            setModalLoading(false);
+        }
     };
 
     const handleDeleteSubtaskField = (index) => {
         setSubtasks(subtasks.filter((_, subtaskIndex) => subtaskIndex !== index));
     };
 
-    const handleDeleteSubtask = (taskId, subtaskId) => {
-        dispatch(deleteSubtask({ taskId, subtaskId }));
-        toast.success('Subtask deleted successfully');
+    const handleDeleteSubtask = async (taskId, subtaskId) => {
+        setLoading(true);
+        try {
+            await dispatch(deleteSubtask({ taskId, subtaskId })).unwrap();
+            toast.success('Subtask deleted successfully');
+        } catch (error) {
+            toast.error('Failed to delete subtask');
+        } finally {
+            setLoading(false); 
+        }
     };
 
     const filteredTasks = Array.isArray(tasks) ? tasks.filter(task =>
@@ -119,11 +156,10 @@ function TaskManager() {
     ) : [];
 
     return (
-        <div className="flex h-screen bg-[#EFEDED]">
+        <div className="flex h-screen bg-gradient-to-br from-[#dfe9f3] to-[#efefef]">
             <Toaster />
-            {/* Left Sidebar */}
             <div className={`fixed inset-y-0 left-0 top-4 transform z-10 flex flex-col gap-2 md:w-1/4 bg-[#17A2B8] text-black p-4 md:ml-2 overflow-y-auto h-[95vh] shadow-lg rounded-xl [box-shadow:2px_2px_4px_0px_#00000040] ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-                } transition-transform duration-300 md:relative md:translate-x-0 `}>
+                } transition-transform duration-300 md:relative md:translate-x-0`}>
                 <div className="md:hidden flex items-end justify-end">
                     <IoMdClose className='text-white' size={30} onClick={() => setIsSidebarOpen(false)} />
                 </div>
@@ -140,28 +176,33 @@ function TaskManager() {
                     />
                 </div>
                 <div>
-                    {filteredTasks.map(task => (
-                        <div
-                            key={task._id}
-                            className="p-2 mb-2 bg-gray-200 cursor-pointer flex justify-between rounded"
-                            onClick={() => {
-                                setSelectedTask(task)
-                                setIsSidebarOpen(false)
-                            }}
-                        >
-                            <Link to={`/tasks/${task._id}`}>
-                                <h1>{task.name}</h1>
-                            </Link>
-                            <div>
-                                <button onClick={() => handleEditTask(task)} className="mr-2 text-blue-500"><MdEdit /></button>
-                                <button onClick={() => handleDeleteTask(task._id)} className="text-red-500"><MdDelete /></button>
-                            </div>
+                    {loading ? (
+                        <div className="flex justify-center items-center p-2 text-white">
+                            <span>Loading tasks...</span>
                         </div>
-                    ))}
+                    ) : (
+                        filteredTasks.map(task => (
+                            <div
+                                key={task._id}
+                                className="p-2 mb-2 bg-gray-200 cursor-pointer flex justify-between rounded"
+                                onClick={() => {
+                                    setSelectedTask(task);
+                                    setIsSidebarOpen(false);
+                                }}
+                            >
+                                <Link to={`/tasks/${task._id}`}>
+                                    <h1>{task.name}</h1>
+                                </Link>
+                                <div>
+                                    <button onClick={() => handleEditTask(task)} className="mr-2 text-blue-500"><MdEdit /></button>
+                                    <button onClick={() => handleDeleteTask(task._id)} className="text-red-500"><MdDelete /></button>
+                                </div>
+                            </div>
+                        ))
+                    )}
                 </div>
             </div>
-            {/* Main Bar */}
-            <div className="w-full md:w-3/4 bg-[#EFEDED] p-4 overflow-y-auto flex flex-col gap-2">
+            <div className="w-full md:w-3/4 bg-gradient-to-br from-[#dfe9f3] to-[#efefef] p-4 overflow-y-auto flex flex-col gap-2">
                 <div className='flex flex-row items-center justify-between md:text-left'>
                     <div className="lg:hidden text-left text-[#17A2B8]">
                         <FaBars className="text-xl" onClick={toggleSidebar} />
@@ -193,7 +234,6 @@ function TaskManager() {
                     </div>
                 )}
             </div>
-            {/* Modal */}
             <Modal isOpen={modalOpen}>
                 <div className='md:w-[50vw] w-[70vw]'>
                     <div className='flex flex-row justify-between items-center mb-4'>
@@ -214,23 +254,31 @@ function TaskManager() {
                         className="focus:outline-none mb-4 p-2 w-full text-[#9B959F] bg-white rounded border-[1px] border-solid border-[#E2E2E2] [box-shadow:0px_1px_2px_0px_#4D40551A]"
                     />
                     <div className='w-full max-h-[15vh] overflow-y-scroll flex flex-col'>
-                    {subtasks.map((subtask, index) => (
-                        <div key={index} className="p-2 flex items-center gap-2 mb-4 rounded border-[1px] border-solid border-[#E2E2E2]">
-                            <input
-                                type="text"
-                                placeholder={`Subtask ${index + 1}`}
-                                value={subtask}
-                                onChange={(e) => handleSubtaskChange(index, e.target.value)}
-                                className="w-full bg-white text-[#828282] focus:outline-none"
-                                required
-                            />
-                            <button onClick={() => handleDeleteSubtaskField(index)} className="text-red-500"><MdDelete /></button>
-                        </div>
-                    ))}
+                        {subtasks.map((subtask, index) => (
+                            <div key={index} className="p-2 flex items-center gap-2 mb-4 rounded border-[1px] border-solid border-[#E2E2E2]">
+                                <input
+                                    type="text"
+                                    placeholder={`Subtask ${index + 1}`}
+                                    value={subtask}
+                                    onChange={(e) => handleSubtaskChange(index, e.target.value)}
+                                    className="w-full bg-white text-[#828282] focus:outline-none"
+                                    required
+                                />
+                                <button onClick={() => handleDeleteSubtaskField(index)} className="text-red-500"><MdDelete /></button>
+                            </div>
+                        ))}
                     </div>
                     <div onClick={handleAddSubtaskField} className="mb-4 w-full text-[#767575] flex flex-row items-center gap-2 cursor-pointer"><FaPlus /> Add Subtask Field</div>
-                    <button onClick={isEditMode ? handleUpdateTask : handleAddTask} className="mb-4 p-2 w-full bg-green-500 rounded cursor-pointer hover:opacity-[0.5] text-white">
-                        {isEditMode ? 'Update Task' : 'Save Task'}
+                    <button
+                        onClick={isEditMode ? handleUpdateTask : handleAddTask}
+                        disabled={modalLoading}
+                        className="mb-4 p-2 w-full bg-green-500 rounded cursor-pointer hover:opacity-[0.5] text-white flex justify-center items-center"
+                    >
+                        {modalLoading ? (
+                            <span>Loading...</span>
+                        ) : (
+                            isEditMode ? 'Update Task' : 'Save Task'
+                        )}
                     </button>
                 </div>
             </Modal>
